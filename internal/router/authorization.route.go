@@ -22,7 +22,9 @@ func SetAuthorizationRoutes(router *mux.Router) *mux.Router {
 	user.Use(middleware.AuthForAmdmin)
 	user.HandleFunc("/emmit", authorizationController.Create).Methods("POST")
 	user.HandleFunc("/works", authorizationController.GetManyWorks).Methods("GET")
+	user.HandleFunc("/works", authorizationController.CreateWorkDependency).Methods("POST")
 	user.HandleFunc("/jobs", authorizationController.ManyJobs).Methods("GET")
+	user.HandleFunc("/jobs", authorizationController.CreateJob).Methods("POST")
 
 	return router
 }

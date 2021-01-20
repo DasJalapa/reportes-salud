@@ -20,9 +20,12 @@ func NewAuthorizationService(authorizationStorage storage.AuthorizationStorage) 
 
 type AuthorizationService interface {
 	Create(ctx context.Context, auhtorization models.Authorization) (models.Authorization, error)
+
 	GetManyWorkDependency(ctx context.Context) ([]models.WorkDependency, error)
+	CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error)
 
 	ManyJobs(ctx context.Context) ([]models.Job, error)
+	CreateJob(ctx context.Context, job models.Job) (string, error)
 }
 
 func (*authorizationService) Create(ctx context.Context, authorization models.Authorization) (models.Authorization, error) {
@@ -36,4 +39,14 @@ func (*authorizationService) GetManyWorkDependency(ctx context.Context) ([]model
 
 func (*authorizationService) ManyJobs(ctx context.Context) ([]models.Job, error) {
 	return AuthorizationStorage.ManyJobs(ctx)
+}
+
+func (*authorizationService) CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error) {
+	dependency.Uuidwork = uuid.New().String()
+	return AuthorizationStorage.CreateWorkDependency(ctx, dependency)
+}
+
+func (*authorizationService) CreateJob(ctx context.Context, job models.Job) (string, error) {
+	job.UUIDJob = uuid.New().String()
+	return AuthorizationStorage.CreateJob(ctx, job)
 }

@@ -18,7 +18,10 @@ type AuthorizationStorage interface {
 	Create(ctx context.Context, authorization models.Authorization) (models.Authorization, error)
 
 	GetManyWorkDependency(ctx context.Context) ([]models.WorkDependency, error)
+	CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error)
+
 	ManyJobs(ctx context.Context) ([]models.Job, error)
+	CreateJob(ctx context.Context, job models.Job) (string, error)
 }
 
 func (*repoAuthorization) Create(ctx context.Context, authorization models.Authorization) (models.Authorization, error) {
@@ -169,4 +172,26 @@ func (*repoAuthorization) ManyJobs(ctx context.Context) ([]models.Job, error) {
 	}
 
 	return jobs, nil
+}
+
+func (*repoAuthorization) CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error) {
+	query := "INSERT INTO workdependency VALUES (?, ?)"
+
+	_, err := db.QueryContext(ctx, query, dependency.Uuidwork, dependency.Name)
+	if err != nil {
+		return "", err
+	}
+
+	return dependency.Uuidwork, nil
+}
+
+func (*repoAuthorization) CreateJob(ctx context.Context, job models.Job) (string, error) {
+	query := "INSERT INTO job (uuid, name) VALUES (?, ?)"
+
+	_, err := db.QueryContext(ctx, query, job.UUIDJob, job.Job)
+	if err != nil {
+		return "", err
+	}
+
+	return job.UUIDJob, nil
 }

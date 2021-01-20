@@ -23,9 +23,12 @@ func NewAuthorizationController(authorizationService service.AuthorizationServic
 // AuthorizationController contiene todos los controladores de usuario
 type AuthorizationController interface {
 	Create(w http.ResponseWriter, r *http.Request)
+
 	GetManyWorks(w http.ResponseWriter, r *http.Request)
+	CreateWorkDependency(w http.ResponseWriter, r *http.Request)
 
 	ManyJobs(w http.ResponseWriter, r *http.Request)
+	CreateJob(w http.ResponseWriter, r *http.Request)
 }
 
 func (*authorizationController) Create(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +124,78 @@ func (*authorizationController) ManyJobs(w http.ResponseWriter, r *http.Request)
 			Ok:   true,
 			Data: data,
 		}, http.StatusOK)
+		return
+	}
+
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (*authorizationController) CreateWorkDependency(w http.ResponseWriter, r *http.Request) {
+	_, ok := middleware.IsAuthenticated(r.Context())
+	if !ok {
+		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
+		return
+	}
+
+	defer r.Body.Close()
+	var workDependency models.WorkDependency
+
+	if err := json.NewDecoder(r.Body).Decode(&workDependency); err != nil {
+		respond(w, response{
+			Ok:      false,
+			Message: err.Error(),
+		}, http.StatusBadRequest)
+		return
+	}
+
+	result, err := AuthorizationService.CreateWorkDependency(r.Context(), workDependency)
+	if err == nil {
+		respond(w, response{
+			Ok:      true,
+			Message: "Registro creado satisfactoriamente",
+			Data:    result,
+		}, http.StatusCreated)
+		return
+	}
+
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (*authorizationController) CreateJob(w http.ResponseWriter, r *http.Request) {
+	_, ok := middleware.IsAuthenticated(r.Context())
+	if !ok {
+		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
+		return
+	}
+
+	defer r.Body.Close()
+	var job models.Job
+
+	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
+		respond(w, response{
+			Ok:      false,
+			Message: err.Error(),
+		}, http.StatusBadRequest)
+		return
+	}
+
+	result, err := AuthorizationService.CreateJob(r.Context(), job)
+	if err == nil {
+		respond(w, response{
+			Ok:      true,
+			Message: "Registro creado satisfactoriamente",
+			Data:    result,
+		}, http.StatusCreated)
 		return
 	}
 
