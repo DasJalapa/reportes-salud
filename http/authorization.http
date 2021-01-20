@@ -1,0 +1,28 @@
+@host = http://localhost:4000/das/v1
+
+###
+POST {{host}}/authorization/emmit
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiYzFlMjMyN2YtYWZiOS00YTY3LTk1MzUtMjIzNTQwNzZkM2YzIiwidXNlcm5hbWUiOiJtaWtlIiwicm9sIjoiYWRtaW4ifSwiZXhwIjoxNjExMDUzODc3LCJpc3MiOiJtaW5pc3RlcmlvIGRlIHNhbHVkIn0.Oif8qAWigcHB-WJRccEB0VZsr_I90GasZJzYoTVNrl2CvCZsTSCZnpW1b2AuG5-WXxgALD23YOtPw4PJvqEiAYclQhDnbXJwsrw9L77wIZErkVByfcCcL3y58MG3E1kuZRBlNaA3OXtKa33hC9CXWzcA0Abju9_1-8VsLVHCo6Y
+
+{
+    "dateemmited":"2021-01-18",
+    "startdate":"2021-02-3",
+    "enddate":"2021-02-6",
+    "resumework":"2021-12-3",
+    "total_days":13,
+    "pendingdays":2,
+    "observation":"Ninguna",
+    "authorizationyear":"2021",
+    "partida":"9088",
+    "workdependency":"09cdfc58-4b8f-4ec4-b2a0-1af3474754be",
+    "person":{
+        "uuid": "00776805-231a-4ccf-b21b-42a3a48a682d"
+    }
+
+}
+
+###
+GET {{host}}/authorization/works
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiYzFlMjMyN2YtYWZiOS00YTY3LTk1MzUtMjIzNTQwNzZkM2YzIiwidXNlcm5hbWUiOiJtaWtlIiwicm9sIjoiYWRtaW4ifSwiZXhwIjoxNjExMTE2MzI4LCJpc3MiOiJtaW5pc3RlcmlvIGRlIHNhbHVkIn0.UxvdIPGDOb83TXJuwF-Y4YlEJYoH0DPYKe-sjQfevhgN3QeIvFkCLqhOmx0nsKr8OGcDifx2XhHIcVDpaXoObzgWbEU92_VdC7XqOgLf-GX_LAE1yciVMN12900g2yzewEtqPc3IOazTMzs55NukB1kkQY991sLzx_St1R8t7YY

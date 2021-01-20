@@ -1,0 +1,14 @@
+{
+    "PORT": "4000",
+    "HOSTDB": "dasjalapa225.mysql.database.azure.com",
+    "PORTDB": 3306,
+    "USERDB": "poseidon11",
+    "PASSWORDDB": "Guat33mala225",
+    "DATABASE": "sissalud",
+    "_PORT": "4000",
+    "_HOSTDB": "localhost",
+    "_PORTDB": 3306,
+    "_USERDB": "root",
+    "_PASSWORDDB": "system",
+    "_DATABASE": "sissalud"
+}
