@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/Mike2397/reportes-salud/internal/models"
+	"github.com/DasJalapa/reportes-salud/internal/models"
 )
 
 type repoAuthorization struct{}

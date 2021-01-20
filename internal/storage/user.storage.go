@@ -8,10 +8,10 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Mike2397/reportes-salud/internal/helper"
-	"github.com/Mike2397/reportes-salud/internal/lib"
-	"github.com/Mike2397/reportes-salud/internal/models"
-	"github.com/Mike2397/reportes-salud/internal/mysql"
+	"github.com/DasJalapa/reportes-salud/internal/helper"
+	"github.com/DasJalapa/reportes-salud/internal/lib"
+	"github.com/DasJalapa/reportes-salud/internal/models"
+	"github.com/DasJalapa/reportes-salud/internal/mysql"
 )
 
 var db = mysql.Connect()

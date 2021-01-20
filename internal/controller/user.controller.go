@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Mike2397/reportes-salud/internal/lib"
-	"github.com/Mike2397/reportes-salud/internal/models"
-	"github.com/Mike2397/reportes-salud/internal/service"
+	"github.com/DasJalapa/reportes-salud/internal/lib"
+	"github.com/DasJalapa/reportes-salud/internal/models"
+	"github.com/DasJalapa/reportes-salud/internal/service"
 )
 
 type userController struct{}

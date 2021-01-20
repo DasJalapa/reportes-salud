@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/Mike2397/reportes-salud/internal/lib"
-	"github.com/Mike2397/reportes-salud/internal/models"
+	"github.com/DasJalapa/reportes-salud/internal/lib"
+	"github.com/DasJalapa/reportes-salud/internal/models"
 )
 
 // NewPersonStorage  constructor para userStorage
