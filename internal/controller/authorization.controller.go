@@ -24,6 +24,8 @@ func NewAuthorizationController(authorizationService service.AuthorizationServic
 type AuthorizationController interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	GetManyWorks(w http.ResponseWriter, r *http.Request)
+
+	ManyJobs(w http.ResponseWriter, r *http.Request)
 }
 
 func (*authorizationController) Create(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +79,7 @@ func (*authorizationController) GetManyWorks(w http.ResponseWriter, r *http.Requ
 			Ok:      false,
 			Data:    data,
 			Message: lib.ErrNotFound.Error(),
-		}, http.StatusOK)
+		}, http.StatusNotFound)
 		return
 	}
 
@@ -95,5 +97,37 @@ func (*authorizationController) GetManyWorks(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
 
+func (*authorizationController) ManyJobs(w http.ResponseWriter, r *http.Request) {
+	_, ok := middleware.IsAuthenticated(r.Context())
+	if !ok {
+		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
+		return
+	}
+
+	data, err := AuthorizationService.ManyJobs(r.Context())
+	if err == lib.ErrNotFound {
+		respond(w, response{
+			Ok:      false,
+			Data:    data,
+			Message: lib.ErrNotFound.Error(),
+		}, http.StatusNotFound)
+		return
+	}
+
+	if err == nil {
+		respond(w, response{
+			Ok:   true,
+			Data: data,
+		}, http.StatusOK)
+		return
+	}
+
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

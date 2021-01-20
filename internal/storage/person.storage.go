@@ -19,17 +19,19 @@ type repoPerson struct{}
 type PersonStorage interface {
 	GetOne(ctx context.Context, uuid string) (models.Person, error)
 	GetMany(ctx context.Context, filter string, limit int) ([]models.Person, error)
+
+	Update(ctx context.Context, uuid string, person models.Person) (string, error)
 }
 
 func (*repoPerson) GetOne(ctx context.Context, uuid string) (models.Person, error) {
 	person := models.Person{}
 	fmt.Println(uuid)
 
-	query := `SELECT p.uuid, p.fullname, p.cui, j.name as job FROM person p
+	query := `SELECT p.uuid, p.fullname, p.cui, p.job_uuid, j.name as job FROM person p
 			  INNER JOIN job j ON p.job_uuid = j.uuid
 			  WHERE p.uuid = ?;`
 
-	rows := db.QueryRowContext(ctx, query, uuid).Scan(&person.UUID, &person.Fullname, &person.CUI, &person.Job)
+	rows := db.QueryRowContext(ctx, query, uuid).Scan(&person.UUID, &person.Fullname, &person.CUI, &person.JobUUUID, &person.Job)
 	if rows == sql.ErrNoRows {
 		return person, lib.ErrNotFound
 	}
@@ -78,4 +80,18 @@ func (*repoPerson) GetMany(ctx context.Context, filter string, limit int) ([]mod
 	}
 
 	return persons, nil
+}
+
+func (*repoPerson) Update(ctx context.Context, uuid string, person models.Person) (string, error) {
+
+	query := "UPDATE person SET fullname = ?, cui = ?, job_uuid = ? "
+	query += " WHERE uuid = ?;"
+
+	fmt.Println(person)
+	_, err := db.QueryContext(ctx, query, person.Fullname, person.CUI, person.JobUUUID, uuid)
+	if err != nil {
+		return "", err
+	}
+
+	return person.UUID, nil
 }

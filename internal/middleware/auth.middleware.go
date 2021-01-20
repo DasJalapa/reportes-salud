@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"strings"
 
@@ -48,7 +47,6 @@ func Auth(next http.Handler) http.Handler {
 // modo administrador
 func AuthForAmdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Middleware passed admin")
 		User, ok := r.Context().Value(Claims).(models.User)
 		if !ok {
 			http.Error(w, lib.ErrUnauthenticated.Error(), http.StatusUnauthorized)

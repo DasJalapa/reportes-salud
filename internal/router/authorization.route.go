@@ -17,10 +17,12 @@ var (
 
 // SetAuthorizationRoutes registra la rutas a usar para los controladires de usuario
 func SetAuthorizationRoutes(router *mux.Router) *mux.Router {
+
 	user := router.PathPrefix("/authorization").Subrouter()
 	user.Use(middleware.AuthForAmdmin)
 	user.HandleFunc("/emmit", authorizationController.Create).Methods("POST")
 	user.HandleFunc("/works", authorizationController.GetManyWorks).Methods("GET")
+	user.HandleFunc("/jobs", authorizationController.ManyJobs).Methods("GET")
 
 	return router
 }

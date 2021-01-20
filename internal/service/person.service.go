@@ -21,6 +21,8 @@ func NewPersonService(personStorage storage.PersonStorage) PersonService {
 type PersonService interface {
 	GetOne(ctx context.Context, uuid string) (models.Person, error)
 	GetMany(ctx context.Context, filter string, limit int) ([]models.Person, error)
+
+	Update(ctx context.Context, uuid string, person models.Person) (string, error)
 }
 
 func (*personService) GetOne(ctx context.Context, uuid string) (models.Person, error) {
@@ -28,4 +30,8 @@ func (*personService) GetOne(ctx context.Context, uuid string) (models.Person, e
 }
 func (*personService) GetMany(ctx context.Context, filter string, limit int) ([]models.Person, error) {
 	return PersonStorage.GetMany(ctx, "%"+filter+"%", limit)
+}
+
+func (*personService) Update(ctx context.Context, uuid string, person models.Person) (string, error) {
+	return PersonStorage.Update(ctx, uuid, person)
 }
