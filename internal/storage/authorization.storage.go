@@ -16,12 +16,91 @@ func NewAuthorizationStorage() AuthorizationStorage {
 
 type AuthorizationStorage interface {
 	Create(ctx context.Context, authorization models.Authorization) (models.Authorization, error)
+	GetManyAuthorizations(ctx context.Context) ([]models.Authorization, error)
+	GetOnlyAuthorization(ctx context.Context, uuid string) (models.Authorization, error)
 
 	GetManyWorkDependency(ctx context.Context) ([]models.WorkDependency, error)
 	CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error)
 
 	ManyJobs(ctx context.Context) ([]models.Job, error)
 	CreateJob(ctx context.Context, job models.Job) (string, error)
+}
+
+func (*repoAuthorization) GetManyAuthorizations(ctx context.Context) ([]models.Authorization, error) {
+	autorization := models.Authorization{}
+	autorizations := []models.Authorization{}
+
+	query := `SELECT a.uuid, a.register, a.dateemmited, p.fullname, p.cui FROM autorization a 
+			  INNER JOIN person p ON a.person_idperson = p.uuid;`
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return autorizations, err
+	}
+
+	for rows.Next() {
+		if err := rows.Scan(&autorization.UUIDAuthorization, &autorization.Register, &autorization.Dateemmited, &autorization.Fullname, &autorization.CUI); err != nil {
+			return autorizations, err
+		}
+
+		autorizations = append(autorizations, autorization)
+	}
+
+	return autorizations, nil
+}
+
+func (*repoAuthorization) GetOnlyAuthorization(ctx context.Context, uuid string) (models.Authorization, error) {
+	autorization := models.Authorization{}
+
+	query := `
+	SELECT 
+		a.uuid,
+		a.person_idperson,
+		a.workdependency_uuid,
+		a.register,
+		p.cui,
+		p.fullname,
+		a.dateemmited,
+		a.startdate,
+		a.enddate,
+		a.resumework,
+		a.holidays,
+		a.totaldays,
+		a.pendingdays,
+		a.observation,
+		a.authorizationyear,
+		a.partida,
+		w.name as workdependency
+	FROM autorization a
+	INNER JOIN person p ON a.person_idperson = p.uuid
+	INNER JOIN workdependency w ON a.workdependency_uuid = w.uuid
+	WHERE a.uuid = ?;`
+
+	err := db.QueryRowContext(ctx, query, uuid).Scan(
+		&autorization.UUIDAuthorization,
+		&autorization.UUID,
+		&autorization.WorkdependencyUUID,
+		&autorization.Register,
+		&autorization.CUI,
+		&autorization.Fullname,
+		&autorization.Dateemmited,
+		&autorization.Startdate,
+		&autorization.Enddate,
+		&autorization.Resumework,
+		&autorization.Holidays,
+		&autorization.TotalDays,
+		&autorization.Pendingdays,
+		&autorization.Observation,
+		&autorization.Authorizationyear,
+		&autorization.Partida,
+		&autorization.Workdependency,
+	)
+
+	if err != nil {
+		return autorization, err
+	}
+
+	return autorization, nil
 }
 
 func (*repoAuthorization) Create(ctx context.Context, authorization models.Authorization) (models.Authorization, error) {

@@ -25,6 +25,8 @@ func SetAuthorizationRoutes(router *mux.Router) *mux.Router {
 	user.HandleFunc("/works", authorizationController.CreateWorkDependency).Methods("POST")
 	user.HandleFunc("/jobs", authorizationController.ManyJobs).Methods("GET")
 	user.HandleFunc("/jobs", authorizationController.CreateJob).Methods("POST")
+	user.HandleFunc("/many", authorizationController.GetManyAuthorizations).Methods("GET")
+	user.HandleFunc("/one/{uuid}", authorizationController.GetOnlyAuthorization).Methods("GET")
 
 	return router
 }
