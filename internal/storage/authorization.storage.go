@@ -18,6 +18,7 @@ type AuthorizationStorage interface {
 	Create(ctx context.Context, authorization models.Authorization) (models.Authorization, error)
 	GetManyAuthorizations(ctx context.Context) ([]models.Authorization, error)
 	GetOnlyAuthorization(ctx context.Context, uuid string) (models.Authorization, error)
+	UpdateAuthorization(ctx context.Context, authorization models.Authorization, uuid string) (models.Authorization, error)
 
 	GetManyWorkDependency(ctx context.Context) ([]models.WorkDependency, error)
 	CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error)
@@ -70,10 +71,12 @@ func (*repoAuthorization) GetOnlyAuthorization(ctx context.Context, uuid string)
 		a.observation,
 		a.authorizationyear,
 		a.partida,
-		w.name as workdependency
+		w.name as workdependency,
+		j.name as job
 	FROM autorization a
 	INNER JOIN person p ON a.person_idperson = p.uuid
 	INNER JOIN workdependency w ON a.workdependency_uuid = w.uuid
+	INNER JOIN job j ON p.job_uuid = j.uuid
 	WHERE a.uuid = ?;`
 
 	err := db.QueryRowContext(ctx, query, uuid).Scan(
@@ -94,6 +97,7 @@ func (*repoAuthorization) GetOnlyAuthorization(ctx context.Context, uuid string)
 		&autorization.Authorizationyear,
 		&autorization.Partida,
 		&autorization.Workdependency,
+		&autorization.Job,
 	)
 
 	if err != nil {
@@ -157,49 +161,9 @@ func (*repoAuthorization) Create(ctx context.Context, authorization models.Autho
 	if err != nil {
 		return authoriza, err
 	}
-	querySelect := `
-	SELECT
-    	a.register,
-    	a.dateemmited,
-    	a.startdate,
-    	a.enddate,
-		a.resumework,
-		a.holidays,
-    	a.totaldays,
-    	a.pendingdays,
-    	a.observation,
-    	a.authorizationyear,
-    	a.partida,
-    	w.name as workdependency,
-    	p.fullname,
-    	p.cui,
-    	j.name as job
-	FROM
-    	autorization a
-    	INNER JOIN person p ON a.person_idperson = p.uuid
-		INNER JOIN job j ON p.job_uuid = j.uuid
-		INNER JOIN workdependency w ON a.workdependency_uuid = w.uuid
-    	WHERE a.uuid = ?
-	`
-	err = trans.QueryRowContext(ctx, querySelect, authorization.UUIDAuthorization).Scan(
-		&authoriza.Register,
-		&authoriza.Dateemmited,
-		&authoriza.Startdate,
-		&authoriza.Enddate,
-		&authoriza.Resumework,
-		&authoriza.Holidays,
-		&authoriza.TotalDays,
-		&authoriza.Pendingdays,
-		&authoriza.Observation,
-		&authoriza.Authorizationyear,
-		&authoriza.Partida,
-		&authoriza.Workdependency,
-		&authoriza.Fullname,
-		&authoriza.CUI,
-		&authoriza.Job,
-	)
 
-	if err != sql.ErrNoRows {
+	authoriza, err = DataPDFAuthorization(ctx, authorization.UUIDAuthorization, db)
+	if err != nil {
 		return authoriza, err
 	}
 
@@ -273,4 +237,114 @@ func (*repoAuthorization) CreateJob(ctx context.Context, job models.Job) (string
 	}
 
 	return job.UUIDJob, nil
+}
+
+func (*repoAuthorization) UpdateAuthorization(ctx context.Context, authorization models.Authorization, uuid string) (models.Authorization, error) {
+	authoriza := models.Authorization{}
+	trans, err := db.BeginTx(ctx, nil)
+
+	if err != nil {
+		return authoriza, err
+	}
+	defer trans.Rollback()
+
+	query := `
+		UPDATE autorization SET
+			dateemmited = ?,
+			startdate = ?,
+			enddate = ?,
+			resumework = ?,
+			holidays = ?,
+			totaldays = ?,
+			pendingdays = ?,
+			observation = ?,
+			authorizationyear = ?,
+			partida = ?,
+			workdependency_uuid = ?
+		WHERE uuid = ?;`
+
+	_, err = db.QueryContext(ctx, query,
+		authorization.Dateemmited,
+		authorization.Startdate,
+		authorization.Enddate,
+		authorization.Resumework,
+		authorization.Holidays,
+		authorization.TotalDays,
+		authorization.Pendingdays,
+		authorization.Observation,
+		authorization.Authorizationyear,
+		authorization.Partida,
+		authorization.WorkdependencyUUID,
+		uuid,
+	)
+	if err != nil {
+		return authoriza, err
+	}
+
+	authoriza, err = DataPDFAuthorization(ctx, uuid, db)
+
+	if err != nil {
+		return authoriza, err
+	}
+
+	if errtrans := trans.Commit(); errtrans != nil {
+		return authoriza, errtrans
+	}
+
+	return authoriza, nil
+}
+
+func DataPDFAuthorization(ctx context.Context, UUIDAuthorization string, trans *sql.DB) (models.Authorization, error) {
+	authoriza := models.Authorization{}
+	querySelect := `
+	SELECT
+    	a.register,
+    	a.dateemmited,
+    	a.startdate,
+    	a.enddate,
+		a.resumework,
+		a.holidays,
+    	a.totaldays,
+    	a.pendingdays,
+    	a.observation,
+    	a.authorizationyear,
+    	a.partida,
+    	w.name as workdependency,
+    	p.fullname,
+    	p.cui,
+    	j.name as job
+	FROM
+    	autorization a
+    	INNER JOIN person p ON a.person_idperson = p.uuid
+		INNER JOIN job j ON p.job_uuid = j.uuid
+		INNER JOIN workdependency w ON a.workdependency_uuid = w.uuid
+    	WHERE a.uuid = ?
+	`
+	err := db.QueryRowContext(ctx, querySelect, UUIDAuthorization).Scan(
+		&authoriza.Register,
+		&authoriza.Dateemmited,
+		&authoriza.Startdate,
+		&authoriza.Enddate,
+		&authoriza.Resumework,
+		&authoriza.Holidays,
+		&authoriza.TotalDays,
+		&authoriza.Pendingdays,
+		&authoriza.Observation,
+		&authoriza.Authorizationyear,
+		&authoriza.Partida,
+		&authoriza.Workdependency,
+		&authoriza.Fullname,
+		&authoriza.CUI,
+		&authoriza.Job,
+	)
+
+	if err != sql.ErrNoRows {
+		return authoriza, err
+	}
+
+	if err != nil {
+		return authoriza, err
+	}
+
+	return authoriza, nil
 }

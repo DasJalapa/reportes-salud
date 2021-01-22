@@ -27,6 +27,9 @@ type AuthorizationController interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	GetManyAuthorizations(w http.ResponseWriter, r *http.Request)
 	GetOnlyAuthorization(w http.ResponseWriter, r *http.Request)
+	UpdateAuthorization(w http.ResponseWriter, r *http.Request)
+
+	GetOnlyAuthorizationPDF(w http.ResponseWriter, r *http.Request)
 
 	GetManyWorks(w http.ResponseWriter, r *http.Request)
 	CreateWorkDependency(w http.ResponseWriter, r *http.Request)
@@ -243,6 +246,7 @@ func (*authorizationController) GetManyAuthorizations(w http.ResponseWriter, r *
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
 func (*authorizationController) GetOnlyAuthorization(w http.ResponseWriter, r *http.Request) {
 	_, ok := middleware.IsAuthenticated(r.Context())
 	if !ok {
@@ -253,6 +257,85 @@ func (*authorizationController) GetOnlyAuthorization(w http.ResponseWriter, r *h
 	vars := mux.Vars(r)
 
 	data, err := AuthorizationService.GetOnlyAuthorization(r.Context(), vars["uuid"])
+	if err == lib.ErrNotFound {
+		respond(w, response{
+			Ok:      false,
+			Data:    data,
+			Message: lib.ErrNotFound.Error(),
+		}, http.StatusOK)
+		return
+	}
+
+	if err == nil {
+		respond(w, response{
+			Ok:   true,
+			Data: data,
+		}, http.StatusOK)
+		return
+	}
+
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (*authorizationController) UpdateAuthorization(w http.ResponseWriter, r *http.Request) {
+	_, ok := middleware.IsAuthenticated(r.Context())
+	if !ok {
+		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
+		return
+	}
+
+	defer r.Body.Close()
+	var authorization models.Authorization
+
+	if err := json.NewDecoder(r.Body).Decode(&authorization); err != nil {
+		respond(w, response{
+			Ok:      false,
+			Message: err.Error(),
+		}, http.StatusBadRequest)
+		return
+	}
+
+	result, err := AuthorizationService.UpdateAuthorization(r.Context(), authorization, mux.Vars(r)["uuid"])
+	if err == nil {
+		respond(w, response{
+			Ok:      true,
+			Message: "Registro acttualizado satisfactoriamente",
+			Data:    result,
+		}, http.StatusCreated)
+		return
+	}
+
+	if err == lib.ErrNotFound {
+		respond(w, response{
+			Ok:      true,
+			Message: "Registro no encontrado",
+		}, http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (*authorizationController) GetOnlyAuthorizationPDF(w http.ResponseWriter, r *http.Request) {
+	_, ok := middleware.IsAuthenticated(r.Context())
+	if !ok {
+		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	data, err := AuthorizationService.GetOnlyAuthorizationPDF(r.Context(), vars["uuid"])
 	if err == lib.ErrNotFound {
 		respond(w, response{
 			Ok:      false,

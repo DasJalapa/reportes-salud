@@ -8,9 +8,9 @@ type Authorization struct {
 	Startdate          string `json:"startdate,omitempty"`
 	Enddate            string `json:"enddate,omitempty"`
 	Resumework         string `json:"resumework,omitempty"`
-	Holidays           int    `json:"holidays,omitempty"`
-	TotalDays          int    `json:"total_days,omitempty"`
-	Pendingdays        int    `json:"pendingdays,omitempty"`
+	Holidays           int    `json:"holidays"`
+	TotalDays          int    `json:"total_days"`
+	Pendingdays        int    `json:"pendingdays"`
 	Observation        string `json:"observation,omitempty"`
 	Authorizationyear  string `json:"authorizationyear,omitempty"`
 	Partida            string `json:"partida,omitempty"`
