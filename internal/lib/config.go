@@ -28,5 +28,12 @@ func Config() models.Config {
 		log.Fatal(err.Error())
 	}
 
+	if !parameters.PRODUCTION {
+		parameters.HOSTDB = parameters.DEVHOSTDB
+		parameters.PORTDB = parameters.DEVPORTDB
+		parameters.USERDB = parameters.DEVUSERDB
+		parameters.PASSWORDDB = parameters.DEVPASSWORDDB
+		parameters.DATABASE = parameters.DEVDATABASE
+	}
 	return parameters
 }

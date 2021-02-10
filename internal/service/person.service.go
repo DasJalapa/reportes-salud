@@ -7,7 +7,8 @@ import (
 	"github.com/DasJalapa/reportes-salud/internal/storage"
 )
 
-type personService struct{}
+type personService struct {
+}
 
 var PersonStorage storage.PersonStorage
 
@@ -20,7 +21,7 @@ func NewPersonService(personStorage storage.PersonStorage) PersonService {
 // PersonService implementa el conjunto de metodos de servicio para usuario
 type PersonService interface {
 	GetOne(ctx context.Context, uuid string) (models.Person, error)
-	GetMany(ctx context.Context, filter string, limit int) ([]models.Person, error)
+	GetMany(ctx context.Context, filter string, limit, page int) ([]models.Person, error)
 
 	Update(ctx context.Context, uuid string, person models.Person) (string, error)
 }
@@ -28,8 +29,8 @@ type PersonService interface {
 func (*personService) GetOne(ctx context.Context, uuid string) (models.Person, error) {
 	return PersonStorage.GetOne(ctx, uuid)
 }
-func (*personService) GetMany(ctx context.Context, filter string, limit int) ([]models.Person, error) {
-	return PersonStorage.GetMany(ctx, "%"+filter+"%", limit)
+func (*personService) GetMany(ctx context.Context, filter string, limit, page int) ([]models.Person, error) {
+	return PersonStorage.PaginationQuery(limit, page).GetMany(ctx, filter)
 }
 
 func (*personService) Update(ctx context.Context, uuid string, person models.Person) (string, error) {

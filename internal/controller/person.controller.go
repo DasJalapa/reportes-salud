@@ -72,17 +72,18 @@ func (*personController) GetMany(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	limit, err := strconv.Atoi(vars["limit"])
+	limit, err := strconv.Atoi(lib.ValuesURL(r, "limit"))
+	page, err := strconv.Atoi(lib.ValuesURL(r, "page"))
+	filter := lib.ValuesURL(r, "filter")
 	if err != nil {
 		respond(w, response{
 			Ok:      false,
-			Message: err.Error(),
+			Message: "Los argumentos enviados por url son invalidos",
 		}, http.StatusBadRequest)
 		return
 	}
 
-	data, err := PersonService.GetMany(r.Context(), vars["filter"], limit)
+	data, err := PersonService.GetMany(r.Context(), filter, limit, page)
 	if err == lib.ErrNotFound {
 		respond(w, response{
 			Ok:      false,

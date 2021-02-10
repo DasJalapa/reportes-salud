@@ -22,7 +22,7 @@ func main() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "DELETE"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 
-	fmt.Printf("Listen and serve on port :%s", port)
+	fmt.Printf("Listen and serve on port :%s\n", port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), handlers.CORS(headersOk, methodsOk, originsOk)(router.InitRoutes())); err != nil {
 		fmt.Println(err)
 	}

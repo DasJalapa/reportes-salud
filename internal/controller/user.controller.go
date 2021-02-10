@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/DasJalapa/reportes-salud/internal/lib"
+	"github.com/DasJalapa/reportes-salud/internal/middleware"
 	"github.com/DasJalapa/reportes-salud/internal/models"
 	"github.com/DasJalapa/reportes-salud/internal/service"
 )
@@ -23,6 +24,10 @@ func NewUserController(service service.UserService) UserController {
 type UserController interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)
+
+	ManyUsers(w http.ResponseWriter, r *http.Request)
+	Rols(w http.ResponseWriter, r *http.Request)
+	ChangePassword(w http.ResponseWriter, r *http.Request)
 }
 
 func (*userController) Create(w http.ResponseWriter, r *http.Request) {
@@ -131,54 +136,94 @@ func (*userController) Login(w http.ResponseWriter, r *http.Request) {
 // 	}
 // }
 
-// func (*userController) GetManyUsers(w http.ResponseWriter, r *http.Request) {
-// 	var users []models.User
-// 	data, err := userService.GetManyUsers(r.Context())
-// 	if err == lib.ErrNotFound {
-// 		respond(w, response{
-// 			Ok:   false,
-// 			Data: users,
-// 		}, http.StatusNotFound)
-// 	}
+func (*userController) ManyUsers(w http.ResponseWriter, r *http.Request) {
+	var users []models.User
+	data, err := userService.ManyUsers(r.Context())
+	if err == lib.ErrNotFound {
+		respond(w, response{
+			Ok:   false,
+			Data: users,
+		}, http.StatusNotFound)
+	}
 
-// 	if err == nil {
-// 		respond(w, response{
-// 			Ok:   true,
-// 			Data: data,
-// 		}, http.StatusOK)
-// 		return
-// 	}
+	if err == nil {
+		respond(w, response{
+			Ok:   true,
+			Data: data,
+		}, http.StatusOK)
+		return
+	}
 
-// 	if err != nil {
-// 		respondError(w, err)
-// 		return
-// 	}
+	if err != nil {
+		respondError(w, err)
+		return
+	}
 
-// 	w.WriteHeader(http.StatusNoContent)
-// }
+	w.WriteHeader(http.StatusNoContent)
+}
 
-// func (*userController) Rols(w http.ResponseWriter, r *http.Request) {
+func (*userController) Rols(w http.ResponseWriter, r *http.Request) {
 
-// 	data, err := userService.Roles(r.Context())
-// 	if err == lib.ErrNotFound {
-// 		respond(w, response{
-// 			Ok:   false,
-// 			Data: data,
-// 		}, http.StatusNotFound)
-// 	}
+	data, err := userService.Roles(r.Context())
+	if err == lib.ErrNotFound {
+		respond(w, response{
+			Ok:   false,
+			Data: data,
+		}, http.StatusNotFound)
+	}
 
-// 	if err == nil {
-// 		respond(w, response{
-// 			Ok:   true,
-// 			Data: data,
-// 		}, http.StatusOK)
-// 		return
-// 	}
+	if err == nil {
+		respond(w, response{
+			Ok:   true,
+			Data: data,
+		}, http.StatusOK)
+		return
+	}
 
-// 	if err != nil {
-// 		respondError(w, err)
-// 		return
-// 	}
+	if err != nil {
+		respondError(w, err)
+		return
+	}
 
-// 	w.WriteHeader(http.StatusNoContent)
-// }
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (*userController) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	uuid, ok := middleware.IsAuthenticated(r.Context())
+	if !ok {
+		respond(w, response{
+			Ok:      false,
+			Message: lib.ErrUnauthenticated.Error(),
+		}, http.StatusUnauthorized)
+		return
+	}
+	credentials := models.Credentials{}
+	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	err := userService.ChangePassword(r.Context(), uuid, credentials.ActualPassword, credentials.NewPassword)
+	if err == lib.ErrUserNotFound {
+		respond(w, response{
+			Ok:      false,
+			Message: "Registro no encontrado",
+		}, http.StatusNotFound)
+		return
+	}
+
+	if err == nil {
+		respond(w, response{
+			Ok:      true,
+			Message: "Password modificada correctamente",
+		}, http.StatusOK)
+		return
+	}
+
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

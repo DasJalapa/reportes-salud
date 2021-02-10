@@ -28,23 +28,29 @@ func Connect() *sql.DB {
 	server := c.HOSTDB
 	database := c.DATABASE
 
-	rootCert := x509.NewCertPool()
-	pem, err := ioutil.ReadFile("./internal/certificates/mysqlCertified.pem")
-	if err != nil {
-		log.Fatal(err)
-	}
+	var connection = user + ":" + password + "@tcp(" + server + ")/" + database
 
-	if ok := rootCert.AppendCertsFromPEM(pem); !ok {
-		log.Fatal(err)
-	}
+	if c.PRODUCTION {
+		rootCert := x509.NewCertPool()
+		pem, err := ioutil.ReadFile("./internal/certificates/mysqlCertified.pem")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	mysql.RegisterTLSConfig("custom", &tls.Config{
-		ServerName: server,
-		RootCAs:    rootCert,
-	})
+		if ok := rootCert.AppendCertsFromPEM(pem); !ok {
+			log.Fatal(err)
+		}
+
+		mysql.RegisterTLSConfig("custom", &tls.Config{
+			ServerName: server,
+			RootCAs:    rootCert,
+		})
+
+		connection = user + ":" + password + "@tcp(" + server + ")/" + database + "?tls=custom"
+	}
 
 	once.Do(func() {
-		db, err = sql.Open("mysql", user+":"+password+"@tcp("+server+")/"+database+"?tls=custom")
+		db, err = sql.Open("mysql", connection)
 		if err != nil {
 			log.Println(err.Error())
 		}

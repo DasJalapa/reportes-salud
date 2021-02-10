@@ -30,6 +30,8 @@ type UserStorage interface {
 	Login(ctx context.Context, user *models.User) (models.User, error)
 	GetManyUsers(ctx context.Context) ([]models.User, error)
 	Roles(ctx context.Context) ([]models.Rol, error)
+
+	ChangePassword(ctx context.Context, uuidUser, actualPassword, newPassword string) error
 }
 
 func (*repoUser) Create(ctx context.Context, user *models.User) (string, error) {
@@ -100,8 +102,9 @@ func (*repoUser) GetManyUsers(ctx context.Context) ([]models.User, error) {
 	user := models.User{}
 	users := []models.User{}
 
-	query := "SELECT u.idUser, u.userName, r.typeRol FROM VPO_User u " +
-		"INNER JOIN VPO_UserRole r ON u.uuidRol = r.uuidRol;"
+	query := `SELECT u.uuid, u.username, r.role FROM user u 
+			  INNER JOIN rol r ON u.rol_id = r.id;`
+
 	rows, err := db.QueryContext(ctx, query)
 	if err == sql.ErrNoRows {
 		return users, lib.ErrNotFound
@@ -119,11 +122,12 @@ func (*repoUser) GetManyUsers(ctx context.Context) ([]models.User, error) {
 
 	return users, nil
 }
+
 func (*repoUser) Roles(ctx context.Context) ([]models.Rol, error) {
 	rol := models.Rol{}
 	rols := []models.Rol{}
 
-	query := "SELECT uuidRol, typeRol FROM VPO_UserRole;"
+	query := "SELECT id, role FROM rol;"
 	rows, err := db.QueryContext(ctx, query)
 
 	if err == sql.ErrNoRows {
@@ -139,4 +143,43 @@ func (*repoUser) Roles(ctx context.Context) ([]models.Rol, error) {
 	}
 
 	return rols, err
+}
+
+func (*repoUser) ChangePassword(ctx context.Context, uuidUser, actualPassword, newPassword string) error {
+	trans, err := db.BeginTx(ctx, nil)
+	user := models.User{}
+
+	if err != nil {
+		return err
+	}
+	defer trans.Rollback()
+
+	query := "SELECT uuid, password FROM user "
+	query += "WHERE uuid = ?;"
+
+	if err = db.QueryRowContext(ctx, query, uuidUser).Scan(&user.ID, &user.Password); err != nil {
+		return err
+	}
+
+	hashedPasswordDatabase := []byte(user.Password)
+	if valuePassword := bcrypt.CompareHashAndPassword(hashedPasswordDatabase, []byte(actualPassword)); valuePassword != nil {
+		return lib.ErrUserNotFound
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+
+	if err != nil {
+		return err
+	}
+
+	queryUpdate := "UPDATE user SET password = ? WHERE uuid = ?;"
+	_, err = db.QueryContext(ctx, queryUpdate, string(hashedPassword), uuidUser)
+	if err != nil {
+		return err
+	}
+
+	if errtrans := trans.Commit(); errtrans != nil {
+		return errtrans
+	}
+	return nil
 }

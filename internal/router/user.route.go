@@ -22,6 +22,9 @@ func SetUserRoutes(router *mux.Router) *mux.Router {
 	user := router.PathPrefix("/users").Subrouter()
 	user.Use(middleware.AuthForAmdmin)
 	user.HandleFunc("/register", userController.Create).Methods("POST")
+	user.HandleFunc("", userController.ManyUsers).Methods("GET")
+	user.HandleFunc("/rols", userController.Rols).Methods("GET")
+	user.HandleFunc("/changepassword", userController.ChangePassword).Methods("POST")
 
 	return router
 }

@@ -20,7 +20,7 @@ func SetPersonRoutes(router *mux.Router) *mux.Router {
 	person := router.PathPrefix("/persons").Subrouter()
 	person.Use(middleware.AuthForAmdmin)
 	person.HandleFunc("/{uuid}", personController.GetOne).Methods("GET")
-	person.HandleFunc("/{limit}/{filter}", personController.GetMany).Methods("GET")
+	person.HandleFunc("", personController.GetMany).Methods("GET")
 	person.HandleFunc("/{uuid}", personController.Update).Methods("PUT")
 
 	return router

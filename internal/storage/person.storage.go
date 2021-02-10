@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/DasJalapa/reportes-salud/internal/lib"
 	"github.com/DasJalapa/reportes-salud/internal/models"
@@ -11,21 +10,28 @@ import (
 
 // NewPersonStorage  constructor para userStorage
 func NewPersonStorage() PersonStorage {
-	return &repoPerson{}
+	return &repoPerson{
+		limit:  10,
+		offset: 1,
+	}
 }
 
-type repoPerson struct{}
+type repoPerson struct {
+	limit  int
+	offset int
+	// p PersonStorage
+}
 
 type PersonStorage interface {
 	GetOne(ctx context.Context, uuid string) (models.Person, error)
-	GetMany(ctx context.Context, filter string, limit int) ([]models.Person, error)
+	GetMany(ctx context.Context, filter string) ([]models.Person, error)
 
 	Update(ctx context.Context, uuid string, person models.Person) (string, error)
+	PaginationQuery(page, limit int) *repoPerson
 }
 
 func (*repoPerson) GetOne(ctx context.Context, uuid string) (models.Person, error) {
 	person := models.Person{}
-	fmt.Println(uuid)
 
 	query := `SELECT p.uuid, p.fullname, p.cui, p.job_uuid, j.name as job FROM person p
 			  INNER JOIN job j ON p.job_uuid = j.uuid
@@ -39,30 +45,29 @@ func (*repoPerson) GetOne(ctx context.Context, uuid string) (models.Person, erro
 	return person, nil
 }
 
-func (*repoPerson) GetMany(ctx context.Context, filter string, limit int) ([]models.Person, error) {
+func (p *repoPerson) GetMany(ctx context.Context, filter string) ([]models.Person, error) {
 	person := models.Person{}
 	persons := []models.Person{}
-
-	if limit == 0 {
-		limit = 10
-	}
 
 	var query string
 	args := []interface{}{}
 
 	if filter != "" {
-		query = `SELECT p.uuid, p.fullname, p.cui, j.name as job FROM person p
+		filter = "%" + filter + "%"
+		query = `SELECT p.uuid, p.fullname, p.cui, j.name as job, j.uuid FROM person p
 		INNER JOIN job j ON p.job_uuid = j.uuid
 		WHERE fullname LIKE ? OR cui LIKE ?
-		LIMIT ?;`
+		ORDER BY p.fullname ASC
+		LIMIT ? OFFSET ?;`
 
-		args = append(args, filter, filter, limit)
+		args = append(args, filter, filter, p.limit, p.offset)
 
 	} else {
-		query = `SELECT p.uuid, p.fullname, p.cui, j.name as job FROM person p
+		query = `SELECT p.uuid, p.fullname, p.cui, j.name as job, j.uuid FROM person p
 		INNER JOIN job j ON p.job_uuid = j.uuid
-		limit ?`
-		args = append(args, limit)
+		ORDER BY p.fullname ASC
+		LIMIT ? OFFSET ?;`
+		args = append(args, p.limit, p.offset)
 	}
 
 	rows, err := db.QueryContext(ctx, query, args...)
@@ -71,7 +76,7 @@ func (*repoPerson) GetMany(ctx context.Context, filter string, limit int) ([]mod
 	}
 
 	for rows.Next() {
-		err := rows.Scan(&person.UUID, &person.Fullname, &person.CUI, &person.Job)
+		err := rows.Scan(&person.UUID, &person.Fullname, &person.CUI, &person.Job, &person.JobUUUID)
 		if err != nil {
 			return persons, err
 		}
@@ -87,11 +92,24 @@ func (*repoPerson) Update(ctx context.Context, uuid string, person models.Person
 	query := "UPDATE person SET fullname = ?, cui = ?, job_uuid = ? "
 	query += " WHERE uuid = ?;"
 
-	fmt.Println(person)
 	_, err := db.QueryContext(ctx, query, person.Fullname, person.CUI, person.JobUUUID, uuid)
 	if err != nil {
 		return "", err
 	}
 
 	return person.UUID, nil
+}
+
+func (p *repoPerson) PaginationQuery(limit, page int) *repoPerson {
+	if limit != 0 {
+		p.limit = limit
+	}
+
+	if page >= 1 {
+		p.offset = page - 1
+	} else {
+		p.offset = 0
+	}
+
+	return p
 }
