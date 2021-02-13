@@ -32,7 +32,8 @@ func (*repoAuthorization) GetManyAuthorizations(ctx context.Context) ([]models.A
 	autorizations := []models.Authorization{}
 
 	query := `SELECT a.uuid, a.register, a.dateemmited, p.fullname, p.cui FROM autorization a 
-			  INNER JOIN person p ON a.person_idperson = p.uuid;`
+			  INNER JOIN person p ON a.person_idperson = p.uuid
+			  ORDER BY a.register DESC;`
 
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
