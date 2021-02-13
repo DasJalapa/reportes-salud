@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/DasJalapa/reportes-salud/internal/controller"
-	"github.com/DasJalapa/reportes-salud/internal/middleware"
+	// "github.com/DasJalapa/reportes-salud/internal/middleware"
 	"github.com/DasJalapa/reportes-salud/internal/service"
 	"github.com/DasJalapa/reportes-salud/internal/storage"
 	"github.com/gorilla/mux"
@@ -18,7 +18,7 @@ var (
 func SetPersonRoutes(router *mux.Router) *mux.Router {
 
 	person := router.PathPrefix("/persons").Subrouter()
-	person.Use(middleware.AuthForAmdmin)
+	// person.Use(middleware.AuthForAmdmin)
 	person.HandleFunc("/{uuid}", personController.GetOne).Methods("GET")
 	person.HandleFunc("", personController.GetMany).Methods("GET")
 	person.HandleFunc("/{uuid}", personController.Update).Methods("PUT")

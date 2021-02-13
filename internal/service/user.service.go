@@ -32,7 +32,6 @@ type UserService interface {
 // UserCreate es el servicio de conexion al storage de crear usuario
 func (*userService) Create(ctx context.Context, user *models.User) (string, error) {
 	user.ID = uuid.New().String()
-	user.IDRol = 2
 
 	return Userstorage.Create(ctx, user)
 }

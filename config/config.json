@@ -10,5 +10,5 @@
     "DEVUSERDB": "root",
     "DEVPASSWORDDB": "system",
     "DEVDATABASE": "sissalud",
-    "PRODUCTION": true
+    "PRODUCTION": false
 }
