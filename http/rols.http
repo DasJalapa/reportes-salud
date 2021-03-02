@@ -1,0 +1,7 @@
+@host = http://localhost:4000/das/v1
+# @host =  https://das-jalapa.herokuapp.com/das/v1
+
+###
+GET {{host}}/users/rols
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiYzFlMjMyN2YtYWZiOS00YTY3LTk1MzUtMjIzNTQwNzZkM2YzIiwidXNlcm5hbWUiOiJtaWtlIiwicm9sIjoiYWRtaW4ifSwiZXhwIjoxNjEyOTYxNjY4LCJpc3MiOiJtaW5pc3RlcmlvIGRlIHNhbHVkIn0.VXwq6kVoL--59gtXhYnbkuI0HbLgLpxwFlms9QDKsNcxSe5M2XZizKmCxi0hJuD4iaCsNe77_WUEPNtBxXJaYBaGtO9RlvKrDfOaLfF_Ag4rakd78CyNRnl0BucSCE5R09PobAm7f3Aor8-weIjx8n9YQcboLQzIZZSZdqWHfaw

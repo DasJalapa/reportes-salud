@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
+
 	"github.com/DasJalapa/reportes-salud/internal/lib"
 	"github.com/DasJalapa/reportes-salud/internal/router"
-	"github.com/gorilla/handlers"
 )
 
 func main() {

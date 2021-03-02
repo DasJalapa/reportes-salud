@@ -3,7 +3,9 @@ ser utilizadas a nivel global de la aplicacion
 */
 package lib
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// ErrUnauthenticated error de inicio no correcto
@@ -32,9 +34,6 @@ var (
 	//ErrDuplicateUser  error de usuario invalido por que ya existe
 	ErrDuplicateUser = errors.New("User already exists")
 
-	//ErrUserOK es una confirmacion de ingresado correctamente
-	ErrUserOK = errors.New("User successfully created")
-
 	//ErrNoSeller es error de rolo no vendedor
 	ErrNoSeller = errors.New("Request permission to change role")
 )
@@ -54,21 +53,6 @@ var (
 )
 
 var (
-	// ErrAnyProductFound es el resultado de consulta vacía
-	ErrAnyProductFound = errors.New("No product found for this user")
-)
-
-var (
-	// ErrAnyServiceFound es el resutado de consulta de servicio vacía
-	ErrAnyServiceFound = errors.New("No service found for this user")
-)
-
-var (
-	// ErrNoFoodFound es el resultado de una consulta de food storage vacía
-	ErrNoFoodFound = errors.New("No food service found for this user")
-)
-
-var (
 	// ErrInvalidID error de un id invalido
 	ErrInvalidID = errors.New("The ID is invalid")
 )
@@ -77,3 +61,21 @@ var (
 	// ErrNotFound error de ningun registro encontrado
 	ErrNotFound = errors.New("No existe ningun registro")
 )
+
+var (
+	Err1451 = "El registro no puede ser borrado, tiene una relación externa"
+)
+
+var (
+	Status1451 = errors.New("1451")
+)
+
+func ExtractMysqlError(err error) error {
+	var dbError string
+
+	for i := 6; i <= 9; i++ {
+		dbError += string(err.Error()[i])
+	}
+
+	return errors.New(dbError)
+}

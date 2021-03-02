@@ -7,11 +7,15 @@ import (
 	"net/http"
 )
 
+var emptyArray = [...]string{}
+
+// var emptyObject = make(map[string]string)
+
 type response struct {
 	Ok       bool        `json:"ok"`
 	Message  string      `json:"message,omitempty"`
 	IDInsert string      `json:"id_insert,omitempty"`
-	Data     interface{} `json:"data,omitempty"`
+	Data     interface{} `json:"data"`
 }
 
 func respond(w http.ResponseWriter, v interface{}, statuscode int) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/DasJalapa/reportes-salud/internal/lib"
 	"github.com/DasJalapa/reportes-salud/internal/models"
 )
 
@@ -19,12 +20,6 @@ type AuthorizationStorage interface {
 	GetManyAuthorizations(ctx context.Context) ([]models.Authorization, error)
 	GetOnlyAuthorization(ctx context.Context, uuid string) (models.Authorization, error)
 	UpdateAuthorization(ctx context.Context, authorization models.Authorization, uuid string) (models.Authorization, error)
-
-	GetManyWorkDependency(ctx context.Context) ([]models.WorkDependency, error)
-	CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error)
-
-	ManyJobs(ctx context.Context) ([]models.Job, error)
-	CreateJob(ctx context.Context, job models.Job) (string, error)
 }
 
 func (*repoAuthorization) GetManyAuthorizations(ctx context.Context) ([]models.Authorization, error) {
@@ -73,7 +68,13 @@ func (*repoAuthorization) GetOnlyAuthorization(ctx context.Context, uuid string)
 		a.authorizationyear,
 		a.partida,
 		w.name as workdependency,
-		j.name as job
+		j.name as job,
+		a.personnelOfficer,
+		a.personnelOfficerPosition,
+		a.personnelOfficerArea,
+		a.executiveDirector,
+		a.executiveDirectorPosition,
+		a.executiveDirectorArea
 	FROM autorization a
 	INNER JOIN person p ON a.person_idperson = p.uuid
 	INNER JOIN workdependency w ON a.workdependency_uuid = w.uuid
@@ -99,8 +100,17 @@ func (*repoAuthorization) GetOnlyAuthorization(ctx context.Context, uuid string)
 		&autorization.Partida,
 		&autorization.Workdependency,
 		&autorization.Job,
+		&autorization.PersonnelOfficer,
+		&autorization.PersonnelOfficerPosition,
+		&autorization.PersonnelOfficerArea,
+		&autorization.ExecutiveDirector,
+		&autorization.ExecutiveDirectorPosition,
+		&autorization.ExecutiveDirectorArea,
 	)
 
+	if err == sql.ErrNoRows {
+		return autorization, lib.ErrNotFound
+	}
 	if err != nil {
 		return autorization, err
 	}
@@ -128,12 +138,19 @@ func (*repoAuthorization) Create(ctx context.Context, authorization models.Autho
         person_idperson,
         partida,
         workdependency_uuid,
-        user_uuid
+		user_uuid,
+		
+		personnelOfficer,
+		personnelOfficerPosition,
+		personnelOfficerArea,
+		executiveDirector,
+		executiveDirectorPosition,
+		executiveDirectorArea
     )
     VALUES(?,
 		(
             SELECT Count(*) + 1 AS count FROM autorization a
-        ),?,?,?,?,?,?,?,?,?,?,?,?,?);`
+        ),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
 	trans, err := db.BeginTx(ctx, nil)
 
 	if err != nil {
@@ -158,6 +175,13 @@ func (*repoAuthorization) Create(ctx context.Context, authorization models.Autho
 		authorization.Partida,
 		authorization.Workdependency,
 		authorization.User,
+
+		authorization.PersonnelOfficer,
+		authorization.PersonnelOfficerPosition,
+		authorization.PersonnelOfficerArea,
+		authorization.ExecutiveDirector,
+		authorization.ExecutiveDirectorPosition,
+		authorization.ExecutiveDirectorArea,
 	)
 	if err != nil {
 		return authoriza, err
@@ -173,71 +197,6 @@ func (*repoAuthorization) Create(ctx context.Context, authorization models.Autho
 	}
 
 	return authoriza, nil
-}
-
-func (*repoAuthorization) GetManyWorkDependency(ctx context.Context) ([]models.WorkDependency, error) {
-	work := models.WorkDependency{}
-	works := []models.WorkDependency{}
-
-	query := "SELECT * FROM workdependency;"
-
-	rows, err := db.QueryContext(ctx, query)
-	if err != nil {
-		return works, err
-	}
-
-	for rows.Next() {
-		err := rows.Scan(&work.Uuidwork, &work.Name)
-		if err != nil {
-			return works, err
-		}
-
-		works = append(works, work)
-	}
-	return works, nil
-}
-
-func (*repoAuthorization) ManyJobs(ctx context.Context) ([]models.Job, error) {
-	query := "SELECT uuid, name FROM job;"
-	job := models.Job{}
-	jobs := []models.Job{}
-
-	rows, err := db.QueryContext(ctx, query)
-	if err != nil {
-		return jobs, err
-	}
-
-	for rows.Next() {
-		if err := rows.Scan(&job.UUIDJob, &job.Job); err != nil {
-			return jobs, err
-		}
-
-		jobs = append(jobs, job)
-	}
-
-	return jobs, nil
-}
-
-func (*repoAuthorization) CreateWorkDependency(ctx context.Context, dependency models.WorkDependency) (string, error) {
-	query := "INSERT INTO workdependency VALUES (?, ?)"
-
-	_, err := db.QueryContext(ctx, query, dependency.Uuidwork, dependency.Name)
-	if err != nil {
-		return "", err
-	}
-
-	return dependency.Uuidwork, nil
-}
-
-func (*repoAuthorization) CreateJob(ctx context.Context, job models.Job) (string, error) {
-	query := "INSERT INTO job (uuid, name) VALUES (?, ?)"
-
-	_, err := db.QueryContext(ctx, query, job.UUIDJob, job.Job)
-	if err != nil {
-		return "", err
-	}
-
-	return job.UUIDJob, nil
 }
 
 func (*repoAuthorization) UpdateAuthorization(ctx context.Context, authorization models.Authorization, uuid string) (models.Authorization, error) {
@@ -261,7 +220,14 @@ func (*repoAuthorization) UpdateAuthorization(ctx context.Context, authorization
 			observation = ?,
 			authorizationyear = ?,
 			partida = ?,
-			workdependency_uuid = ?
+			workdependency_uuid = ?,
+
+			personnelOfficer = ?,
+			personnelOfficerPosition = ?,
+			personnelOfficerArea = ?,
+			executiveDirector = ?,
+			executiveDirectorPosition = ?,
+			executiveDirectorArea = ?
 		WHERE uuid = ?;`
 
 	_, err = db.QueryContext(ctx, query,
@@ -276,6 +242,14 @@ func (*repoAuthorization) UpdateAuthorization(ctx context.Context, authorization
 		authorization.Authorizationyear,
 		authorization.Partida,
 		authorization.WorkdependencyUUID,
+
+		authorization.PersonnelOfficer,
+		authorization.PersonnelOfficerPosition,
+		authorization.PersonnelOfficerArea,
+		authorization.ExecutiveDirector,
+		authorization.ExecutiveDirectorPosition,
+		authorization.ExecutiveDirectorArea,
+
 		uuid,
 	)
 	if err != nil {
@@ -313,7 +287,14 @@ func DataPDFAuthorization(ctx context.Context, UUIDAuthorization string, trans *
     	w.name as workdependency,
     	p.fullname,
     	p.cui,
-    	j.name as job
+		j.name as job,
+		
+		a.personnelOfficer,
+		a.personnelOfficerPosition,
+		a.personnelOfficerArea,
+		a.executiveDirector,
+		a.executiveDirectorPosition,
+		a.executiveDirectorArea
 	FROM
     	autorization a
     	INNER JOIN person p ON a.person_idperson = p.uuid
@@ -337,10 +318,17 @@ func DataPDFAuthorization(ctx context.Context, UUIDAuthorization string, trans *
 		&authoriza.Fullname,
 		&authoriza.CUI,
 		&authoriza.Job,
+
+		&authoriza.PersonnelOfficer,
+		&authoriza.PersonnelOfficerPosition,
+		&authoriza.PersonnelOfficerArea,
+		&authoriza.ExecutiveDirector,
+		&authoriza.ExecutiveDirectorPosition,
+		&authoriza.ExecutiveDirectorArea,
 	)
 
-	if err != sql.ErrNoRows {
-		return authoriza, err
+	if err == sql.ErrNoRows {
+		return authoriza, lib.ErrNotFound
 	}
 
 	if err != nil {

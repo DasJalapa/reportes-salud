@@ -18,16 +18,12 @@ var (
 // SetAuthorizationRoutes registra la rutas a usar para los controladires de usuario
 func SetAuthorizationRoutes(router *mux.Router) *mux.Router {
 
-	authorization := router.PathPrefix("/authorization").Subrouter()
+	authorization := router.PathPrefix("/authorizations").Subrouter()
 	// authorization.Use(middleware.AuthForAmdmin)
-	authorization.HandleFunc("/emmit", authorizationController.Create).Methods("POST")
-	authorization.HandleFunc("/works", authorizationController.GetManyWorks).Methods("GET")
-	authorization.HandleFunc("/works", authorizationController.CreateWorkDependency).Methods("POST")
-	authorization.HandleFunc("/jobs", authorizationController.ManyJobs).Methods("GET")
-	authorization.HandleFunc("/jobs", authorizationController.CreateJob).Methods("POST")
-	authorization.HandleFunc("/many", authorizationController.GetManyAuthorizations).Methods("GET")
-	authorization.HandleFunc("/one/{uuid}", authorizationController.GetOnlyAuthorization).Methods("GET")
-	authorization.HandleFunc("/update/{uuid}", authorizationController.UpdateAuthorization).Methods("PUT")
+	authorization.HandleFunc("", authorizationController.Create).Methods("POST")
+	authorization.HandleFunc("", authorizationController.GetManyAuthorizations).Methods("GET")
+	authorization.HandleFunc("/{uuid}", authorizationController.GetOnlyAuthorization).Methods("GET")
+	authorization.HandleFunc("/{uuid}", authorizationController.UpdateAuthorization).Methods("PUT")
 	authorization.HandleFunc("/pdfauthorization/{uuid}", authorizationController.GetOnlyAuthorizationPDF).Methods("GET")
 
 	return router

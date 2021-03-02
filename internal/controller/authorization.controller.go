@@ -30,12 +30,6 @@ type AuthorizationController interface {
 	UpdateAuthorization(w http.ResponseWriter, r *http.Request)
 
 	GetOnlyAuthorizationPDF(w http.ResponseWriter, r *http.Request)
-
-	GetManyWorks(w http.ResponseWriter, r *http.Request)
-	CreateWorkDependency(w http.ResponseWriter, r *http.Request)
-
-	ManyJobs(w http.ResponseWriter, r *http.Request)
-	CreateJob(w http.ResponseWriter, r *http.Request)
 }
 
 func (*authorizationController) Create(w http.ResponseWriter, r *http.Request) {
@@ -59,144 +53,6 @@ func (*authorizationController) Create(w http.ResponseWriter, r *http.Request) {
 	authorization.User = id
 
 	result, err := AuthorizationService.Create(r.Context(), authorization)
-	if err == nil {
-		respond(w, response{
-			Ok:      true,
-			Message: "Registro creado satisfactoriamente",
-			Data:    result,
-		}, http.StatusCreated)
-		return
-	}
-
-	if err != nil {
-		respondError(w, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (*authorizationController) GetManyWorks(w http.ResponseWriter, r *http.Request) {
-	_, ok := middleware.IsAuthenticated(r.Context())
-	if !ok {
-		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
-		return
-	}
-
-	data, err := AuthorizationService.GetManyWorkDependency(r.Context())
-	if err == lib.ErrNotFound {
-		respond(w, response{
-			Ok:      false,
-			Data:    data,
-			Message: lib.ErrNotFound.Error(),
-		}, http.StatusNotFound)
-		return
-	}
-
-	if err == nil {
-		respond(w, response{
-			Ok:   true,
-			Data: data,
-		}, http.StatusOK)
-		return
-	}
-
-	if err != nil {
-		respondError(w, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (*authorizationController) ManyJobs(w http.ResponseWriter, r *http.Request) {
-	_, ok := middleware.IsAuthenticated(r.Context())
-	if !ok {
-		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
-		return
-	}
-
-	data, err := AuthorizationService.ManyJobs(r.Context())
-	if err == lib.ErrNotFound {
-		respond(w, response{
-			Ok:      false,
-			Data:    data,
-			Message: lib.ErrNotFound.Error(),
-		}, http.StatusNotFound)
-		return
-	}
-
-	if err == nil {
-		respond(w, response{
-			Ok:   true,
-			Data: data,
-		}, http.StatusOK)
-		return
-	}
-
-	if err != nil {
-		respondError(w, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (*authorizationController) CreateWorkDependency(w http.ResponseWriter, r *http.Request) {
-	_, ok := middleware.IsAuthenticated(r.Context())
-	if !ok {
-		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
-		return
-	}
-
-	defer r.Body.Close()
-	var workDependency models.WorkDependency
-
-	if err := json.NewDecoder(r.Body).Decode(&workDependency); err != nil {
-		respond(w, response{
-			Ok:      false,
-			Message: err.Error(),
-		}, http.StatusBadRequest)
-		return
-	}
-
-	result, err := AuthorizationService.CreateWorkDependency(r.Context(), workDependency)
-	if err == nil {
-		respond(w, response{
-			Ok:      true,
-			Message: "Registro creado satisfactoriamente",
-			Data:    result,
-		}, http.StatusCreated)
-		return
-	}
-
-	if err != nil {
-		respondError(w, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (*authorizationController) CreateJob(w http.ResponseWriter, r *http.Request) {
-	_, ok := middleware.IsAuthenticated(r.Context())
-	if !ok {
-		respond(w, response{Message: lib.ErrUnauthenticated.Error()}, http.StatusUnauthorized)
-		return
-	}
-
-	defer r.Body.Close()
-	var job models.Job
-
-	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
-		respond(w, response{
-			Ok:      false,
-			Message: err.Error(),
-		}, http.StatusBadRequest)
-		return
-	}
-
-	result, err := AuthorizationService.CreateJob(r.Context(), job)
 	if err == nil {
 		respond(w, response{
 			Ok:      true,
@@ -260,9 +116,9 @@ func (*authorizationController) GetOnlyAuthorization(w http.ResponseWriter, r *h
 	if err == lib.ErrNotFound {
 		respond(w, response{
 			Ok:      false,
-			Data:    data,
+			Data:    emptyArray,
 			Message: lib.ErrNotFound.Error(),
-		}, http.StatusOK)
+		}, http.StatusNotFound)
 		return
 	}
 
